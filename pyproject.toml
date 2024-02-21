@@ -1,0 +1,11 @@
+[project]
+name = "tagbrewer"
+version = "2024.0.0a1"
+description = "A package for generating V(D)J gene tags for use with decombinator"
+
+[build-system]
+requires = ["setuptools >= 61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

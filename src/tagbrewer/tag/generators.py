@@ -12,26 +12,13 @@
 
 import requests
 import collections
+from tagbrewer.utils import strings
 import pandas as pd
 from bs4 import BeautifulSoup
 import itertools
 from typing import Dict, FrozenSet, DefaultDict, Tuple, List
 
-def get_species():
-    return ("Homo sapiens", "Mus musculus")
-
-def get_tr_gene_groups():
-    return ("TRAV",
-            "TRAJ",
-            "TRBV",
-            "TRBJ",
-            "TRGV",
-            "TRGJ",
-            "TRDV",
-            "TRDJ"
-            )
-
-def parse_fasta_header(line: str) -> (str, str, str):
+def parse_fasta_header(line: str) -> Tuple[str, str, str]:
     """
     Code from: https://github.com/yutanagano/tidytcells/blob/50af17ff1230cd3312caf14bded48987754528ef/scripts/script_utility.py#L2
     """
@@ -72,13 +59,6 @@ def get_tr_alleles_for_gene_group_for_species(gene_group: str, species: str) -> 
 
     return alleles, gene_fastas
 
-def sliceIterator(lst, sliceLen):
-    """
-    Source: https://stackoverflow.com/questions/1335392/iteration-over-list-slices
-    """
-    for i in range(len(lst) - sliceLen + 1):
-        yield lst[i:i + sliceLen]
-
 def gen_tags(fasta_dicts: DefaultDict, tag_len: int=20) -> Dict[str, List[str]]:
     """
     Generate 20bp tags from the prototypical allelel sequence for each gene
@@ -86,7 +66,7 @@ def gen_tags(fasta_dicts: DefaultDict, tag_len: int=20) -> Dict[str, List[str]]:
     gene_group_tags = {}
     for gene, alleles in fasta_dicts.items():
         prototypical_fasta = alleles['01']
-        possible_tags = [i for i in sliceIterator(prototypical_fasta, tag_len)]
+        possible_tags = [i for i in strings.sliceIterator(prototypical_fasta, tag_len)]
         gene_group_tags[gene] = possible_tags
     return gene_group_tags
 
@@ -112,24 +92,24 @@ def find_undecombinable_genes(alleles_fastas: DefaultDict,
     
     return set(alleles_fastas) - set(unique_tags)
 
-if __name__ == "__main__":
-    TAG_LEN = 20 # Specify tag lengths
-    for species in get_species():
-        for gene_group in get_tr_gene_groups():
-            alleles_functionality, alleles_fastas = get_tr_alleles_for_gene_group_for_species(gene_group, species)
-            gene_group_tags = gen_tags(alleles_fastas, TAG_LEN)
-            unique_tags = find_unique_tags(gene_group_tags)
-            undecombinable_genes = find_undecombinable_genes(alleles_fastas, unique_tags)
-            if len(undecombinable_genes) == 0:
-                decombineable_genes = len([i for i in unique_tags.keys()])
-                tag_counts = [len(i) for i in unique_tags.values()]
-                sum_tag_counts = sum(tag_counts)
-                mean_gene_tags = sum_tag_counts / decombineable_genes
-                std_dev_gene_tags = (sum([(i - mean_gene_tags)**2 for i in tag_counts]) / decombineable_genes)**(1/2)
-                print(f"Mean tag counts = {mean_gene_tags} (SD) {std_dev_gene_tags} for {species}, {gene_group} across {decombineable_genes} genes.")
-            else:
-                print(f"Genes with no valid decombinator tag for {species}, {gene_group}: {undecombinable_genes}. \
-                        {len(set(unique_tags))}/{len(set(alleles_fastas))} decombinable.")
+# if __name__ == "__main__":
+#     TAG_LEN = 20 # Specify tag lengths
+#     for species in strings.get_species():
+#         for gene_group in strings.get_tr_gene_groups():
+#             alleles_functionality, alleles_fastas = get_tr_alleles_for_gene_group_for_species(gene_group, species)
+#             gene_group_tags = gen_tags(alleles_fastas, TAG_LEN)
+#             unique_tags = find_unique_tags(gene_group_tags)
+#             undecombinable_genes = find_undecombinable_genes(alleles_fastas, unique_tags)
+#             if len(undecombinable_genes) == 0:
+#                 decombineable_genes = len([i for i in unique_tags.keys()])
+#                 tag_counts = [len(i) for i in unique_tags.values()]
+#                 sum_tag_counts = sum(tag_counts)
+#                 mean_gene_tags = sum_tag_counts / decombineable_genes
+#                 std_dev_gene_tags = (sum([(i - mean_gene_tags)**2 for i in tag_counts]) / decombineable_genes)**(1/2)
+#                 print(f"Mean tag counts = {mean_gene_tags} (SD) {std_dev_gene_tags} for {species}, {gene_group} across {decombineable_genes} genes.")
+#             else:
+#                 print(f"Genes with no valid decombinator tag for {species}, {gene_group}: {undecombinable_genes}. \
+#                         {len(set(unique_tags))}/{len(set(alleles_fastas))} decombinable.")
             
             
 
