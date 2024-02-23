@@ -5,7 +5,7 @@
 # 2. Compare set of genes from IMGT and Decombinator tag dictionary
 # 3. Compare functionality properties
 
-from tagbrewer.tag import generators
+from tagbrewer.tag import query
 from tagbrewer.utils import categories
 import collections
 import pathlib
@@ -13,9 +13,9 @@ import pathlib
 def collapse_alleles(alleles_dict: dict) -> list:
     return [i for i in alleles_dict.keys()]
 
-def extract_gene_list(directory: str, species: str, version: str, gene_groups: str) -> set:
+def extract_gene_list(directory: str, species: str, version: str, chain: str, region: str) -> set:
 
-    filename = pathlib.Path(f"{directory}/{species}_{version}_{gene_groups}.tags").resolve()
+    filename = pathlib.Path(f"{directory}/{species}_{version}_TR{chain}{region}.tags").resolve()
 
     with open(filename, "r") as file:
         lines = [line.rstrip() for line in file]
@@ -32,8 +32,7 @@ def extract_gene_list(directory: str, species: str, version: str, gene_groups: s
     
     return set(gene_names)
 
-def find_gene_differences(directory: str, species: str, version: str, gene_group: str) -> set:
-    """ Takes an """
+def find_gene_differences(directory: str, species: str, version: str, chain: str, region: str) -> set:
     if species == "human":
         species_fmt1 = "Homo sapiens"
         species_fmt2 = "human"
@@ -42,14 +41,14 @@ def find_gene_differences(directory: str, species: str, version: str, gene_group
         species_fmt2 = "mouse"
 
     try:
-        alleles_functionality, alleles_fastas = generators.get_tr_alleles_for_gene_group_for_species(gene_group, species_fmt1)
+        alleles_functionality, alleles_fastas = query.get_tr_alleles_for_gene_group_for_species(chain, region, species_fmt1)
     except FileNotFoundError:
-        return f"{gene_group} not present in current decombinator."
+        return f"TR{chain}{region} not present in current decombinator."
     
     imgt_gene_list = set(collapse_alleles(alleles_fastas))
-    dcr_gene_list = extract_gene_list(directory, species_fmt2, version, gene_group)
+    dcr_gene_list = extract_gene_list(directory, species_fmt2, version, chain, region)
     diff = dcr_gene_list.symmetric_difference(imgt_gene_list)
     if len(diff) == 0:
-        return f"{gene_group} up to date."
+        return f"TR{chain}{region} up to date."
     else:
         return diff

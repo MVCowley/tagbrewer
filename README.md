@@ -1,6 +1,6 @@
-# decombinator_tag_generator
+# tagbrewer
 
-Scripts for generating the tags used by [Decombinator](https://github.com/innate2adaptive/Decombinator).
+Package for generating the tags used by [Decombinator](https://github.com/innate2adaptive/Decombinator).
 
 ## Approach
 

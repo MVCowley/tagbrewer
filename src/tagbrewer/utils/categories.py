@@ -2,14 +2,14 @@ def get_species():
     return ("Homo sapiens", "Mus musculus")
 
 def get_tr_gene_groups():
-    return ("TRAV",
-            "TRAJ",
-            "TRBV",
-            "TRBJ",
-            "TRGV",
-            "TRGJ",
-            "TRDV",
-            "TRDJ"
+    return (("A", "V"),
+            ("A", "J"),
+            ("B", "V"),
+            ("B", "J"),
+            ("G", "V"),
+            ("G", "J"),
+            ("D", "V"),
+            ("D", "J")
             )
 
 def get_alt_species():
