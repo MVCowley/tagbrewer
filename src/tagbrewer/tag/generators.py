@@ -1,22 +1,15 @@
-# Script to generate tags for Decombinator assignment
-
-# Pseudocode
-# 1. Pull all possible sequences for the given chain and gene_groups from tidytcells
-# 2. For each sequence generate list of all possible 20bp substrings
-# 3. For each substring, search all other sequence substrings for a match,
-#   saving each unique substring.
-# 4. Save a csv of genes + their unique tag
-# 5. Save a csv of genes with no unique tags
-
 # TODO: add functionality which creates files in Decombinator expected format.
 
 import requests
 import collections
-from tagbrewer.utils import strings
+from tagbrewer.utils import strings, sequences
 import pandas as pd
 from bs4 import BeautifulSoup
 import itertools
 from typing import Dict, FrozenSet, DefaultDict, Tuple, List
+
+READ_1_LENGTH = 150
+V_REGION_DELS = 10
 
 def parse_fasta_header(line: str) -> Tuple[str, str, str]:
     """
@@ -47,7 +40,7 @@ def get_tr_alleles_for_gene_group_for_species(gene_group: str, species: str) -> 
         gene, allele_designation, functionality = parse_fasta_header(line)
         alleles[gene][allele_designation] = functionality
 
-    # NEW: Now create code which parses fasta data
+    # NEW: Code which returns FASTA data
     gene_fastas = collections.defaultdict(dict)
     fasta_lines = fasta.split(">")
     for line in fasta_lines[1:]:
@@ -58,6 +51,28 @@ def get_tr_alleles_for_gene_group_for_species(gene_group: str, species: str) -> 
         gene_fastas[gene][allele_designation] = line_fasta
 
     return alleles, gene_fastas
+
+def get_max_gene_length(region: str, chain: str, species: str):
+    _, region_fastas = get_tr_alleles_for_gene_group_for_species(f"TR{chain}{region}", species)
+    region_lengths = {gene: len(alleles["01"]) for gene, alleles in region_fastas.items()}
+    return max(region_lengths.values())
+
+def conservative_v_gene_start_index(chain: str, species: str):
+    """ Returns a negative number that indexes the V gene """
+    i1_length = len(sequences.get_index_oligo(1))
+    c_length = len(sequences.get_c_region_post_rt(chain=chain, species=species))
+    j_length = get_max_gene_length("J", chain, species)
+
+    if chain == "B":
+        d_length = get_max_gene_length("D", chain, species)
+        not_v_read1 = i1_length + c_length + j_length + d_length
+    else:
+        not_v_read1 = i1_length + c_length + j_length
+
+    return not_v_read1 - READ_1_LENGTH
+
+
+# TODO: create logic in brewers to make j genes and seperate filtered v genes
 
 def gen_tags(fasta_dicts: DefaultDict, tag_len: int=20) -> Dict[str, List[str]]:
     """
@@ -90,26 +105,6 @@ def find_undecombinable_genes(alleles_fastas: DefaultDict,
                               unique_tags: DefaultDict[str, List[str]]
                               ) -> List[str]:
     
+    # TODO: change to symmetric set difference
+    
     return set(alleles_fastas) - set(unique_tags)
-
-# if __name__ == "__main__":
-#     TAG_LEN = 20 # Specify tag lengths
-#     for species in strings.get_species():
-#         for gene_group in strings.get_tr_gene_groups():
-#             alleles_functionality, alleles_fastas = get_tr_alleles_for_gene_group_for_species(gene_group, species)
-#             gene_group_tags = gen_tags(alleles_fastas, TAG_LEN)
-#             unique_tags = find_unique_tags(gene_group_tags)
-#             undecombinable_genes = find_undecombinable_genes(alleles_fastas, unique_tags)
-#             if len(undecombinable_genes) == 0:
-#                 decombineable_genes = len([i for i in unique_tags.keys()])
-#                 tag_counts = [len(i) for i in unique_tags.values()]
-#                 sum_tag_counts = sum(tag_counts)
-#                 mean_gene_tags = sum_tag_counts / decombineable_genes
-#                 std_dev_gene_tags = (sum([(i - mean_gene_tags)**2 for i in tag_counts]) / decombineable_genes)**(1/2)
-#                 print(f"Mean tag counts = {mean_gene_tags} (SD) {std_dev_gene_tags} for {species}, {gene_group} across {decombineable_genes} genes.")
-#             else:
-#                 print(f"Genes with no valid decombinator tag for {species}, {gene_group}: {undecombinable_genes}. \
-#                         {len(set(unique_tags))}/{len(set(alleles_fastas))} decombinable.")
-            
-            
-

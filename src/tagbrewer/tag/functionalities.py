@@ -4,7 +4,7 @@
 # 1. Get list of genes in both IMGT and decombinator WITH assigned functionalities
 # 2. Compare functionalites and report changes
 
-from tagbrewer.tag import generators, checker
+from tagbrewer.tag import checkers, generators
 from tagbrewer.utils import categories
 
 def create_db_functionality_obj(alleles_functionality, unique_tags):
@@ -53,7 +53,7 @@ def find_functionality_differences(directory: str, species: str, version: str, t
                 alleles_functionality, alleles_fastas = generators.get_tr_alleles_for_gene_group_for_species(gene_group, species_fmt1)
                 gene_group_tags = generators.gen_tags(alleles_fastas, tag_len)
                 unique_tags = generators.find_unique_tags(gene_group_tags)
-                dcr_gene_list = checker.extract_gene_list(directory, species_fmt2, version, gene_group)
+                dcr_gene_list = checkers.extract_gene_list(directory, species_fmt2, version, gene_group)
                 diff = dcr_gene_list - set(unique_tags)
                 if len(diff) == 0:
                     missing_genes[gene_group] = None

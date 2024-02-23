@@ -17,6 +17,19 @@ def test_get_tr_alleles_for_gene_group_for_species_nucleotides():
         generators.get_tr_alleles_for_gene_group_for_species(gene_group, species)
     assert alleles_fastas['TRBD1']["01"] == "gggacagggggc"
 
+def test_get_max_gene_length():
+    region = "D"
+    chain = "B"
+    species = "Homo sapiens"
+    max_gene_length = generators.get_max_gene_length(region, chain, species)
+    assert max_gene_length == len("gggactagcggggggg") # TRBD2
+
+def test_conservative_v_gene_start_index():
+    chain = "B"
+    species = "Homo sapiens"
+    start_index = generators.conservative_v_gene_start_index(chain, species)
+    assert start_index == -57
+
 def test_gen_tags_tags_found():
     """ Implicitly tests `sliceIterator` """
     alleles_fastas = collections.defaultdict(dict)
