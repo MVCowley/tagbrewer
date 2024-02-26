@@ -17,7 +17,7 @@ def gen_tags(fasta_dicts: DefaultDict, tag_len: int=20) -> Dict[str, List[str]]:
     gene_group_tags = {}
     for gene, alleles in fasta_dicts.items():
         prototypical_fasta = alleles['01']
-        possible_tags = [i for i in strings.sliceIterator(prototypical_fasta, tag_len)]
+        possible_tags = [i for i in strings.slice_iterator(prototypical_fasta, tag_len)]
         gene_group_tags[gene] = possible_tags
     return gene_group_tags
 
