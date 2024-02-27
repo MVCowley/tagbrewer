@@ -7,7 +7,7 @@ def test_get_tr_alleles_for_gene_group_for_species_functionality():
     chain = "B"
     region = "D"
     alleles_functionality, _ = \
-        query.get_tr_alleles_for_gene_group_for_species(chain, region, species)
+        query.get_tr_alleles(chain, region, species)
     assert alleles_functionality['TRBD1']["01"] == "F"
 
 def test_get_tr_alleles_for_gene_group_for_species_nucleotides():
@@ -15,5 +15,5 @@ def test_get_tr_alleles_for_gene_group_for_species_nucleotides():
     chain = "B"
     region = "D"
     _, alleles_fastas = \
-        query.get_tr_alleles_for_gene_group_for_species(chain, region, species)
+        query.get_tr_alleles(chain, region, species)
     assert alleles_fastas['TRBD1']["01"] == "gggacagggggc"

@@ -1,9 +1,3 @@
-# Script to show functionality changes in genes in tags in decombinator
-
-# Psuedocode
-# 1. Get list of genes in both IMGT and decombinator WITH assigned functionalities
-# 2. Compare functionalites and report changes
-
 from tagbrewer.tag import checkers, generators
 from tagbrewer.utils import categories
 
@@ -35,9 +29,6 @@ def extract_gene_func(directory: str, species: str, version: str, gene_groups: s
             return ValueError
     
     return functionality
-
-def create_dcr_functionality_obj():
-    pass
 
 def find_functionality_differences(directory: str, species: str, version: str, tag_len=20) -> set:
     if species == "human":

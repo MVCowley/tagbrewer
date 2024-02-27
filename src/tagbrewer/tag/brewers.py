@@ -1,21 +1,25 @@
 from abc import ABC, abstractmethod
 from tagbrewer.utils import strings, sequences
 from tagbrewer.tag import query
+import collections
 
 # TODO: Add type hinting
 
 READ_1_LENGTH = 150
-V_REGION_DELS = 10
+REGION_DELS = 10
 
 class Brewer(ABC):
     """ Parent class for Brewers """
 
-    def __init__(self, chain: str, region: str, species: str, tag_len):
-        _, self.fasta_dicts = query.get_tr_alleles_for_gene_group_for_species(chain, region, species)
+    def __init__(self, chain: str, region: str, species: str, tag_len: int=20, functional: bool=False):
+        self.functionality, self.fasta_dicts = query.get_tr_alleles(chain, region, species)
         self.chain = chain
         self.region = region
         self.species = species
         self.tag_len = tag_len
+
+        if functional:
+            self.fasta_dicts = self.drop_non_functional()
 
     @abstractmethod
     def brew_all_tags(self) -> dict:
@@ -41,15 +45,25 @@ class Brewer(ABC):
         undecombinable = set([gene for gene in unique_tags.keys()
                               if len(unique_tags[gene]) == 0])
         return undecombinable
+    
+    def drop_non_functional(self):
+        functional = collections.defaultdict(dict)
+        for gene, alleles in self.fasta_dicts.items():
+            for allele in alleles.keys():
+                if self.functionality[gene][allele] == 'F':
+                    functional[gene][allele] = self.fasta_dicts[gene][allele]
+                else:
+                    continue
+        return functional
 
 class VBrewer(Brewer):
     """ Class which creates V tags """
 
-    def __init__(self, chain: str, species: str, tag_len):
-        super().__init__(chain, "V", species, tag_len)
+    def __init__(self, chain: str, species: str, tag_len: int=20, functional: bool=False):
+        super().__init__(chain, "V", species, tag_len, functional)
 
     def get_max_gene_length(self, other_region):
-        _, region_fastas = query.get_tr_alleles_for_gene_group_for_species(self.chain, other_region, self.species)
+        _, region_fastas = query.get_tr_alleles(self.chain, other_region, self.species)
         region_lengths = {gene: len(alleles["01"]) for gene, alleles in region_fastas.items()}
         return max(region_lengths.values())
 
@@ -67,7 +81,7 @@ class VBrewer(Brewer):
 
         return not_v_read1 - READ_1_LENGTH
 
-    def brew_all_tags(self):
+    def brew_all_tags(self, functional=True):
         """
         Generate 20bp tags from the prototypical allelel sequence for each gene
         """
@@ -75,7 +89,7 @@ class VBrewer(Brewer):
         for gene, alleles in self.fasta_dicts.items():
             prototypical_fasta = alleles['01']
             start_index = self.conservative_v_gene_start_index()
-            sliced_fasta = prototypical_fasta[start_index: -V_REGION_DELS]
+            sliced_fasta = prototypical_fasta[start_index: -REGION_DELS]
             possible_tags = [i for i in strings.slice_iterator(sliced_fasta, self.tag_len)]
             gene_group_tags[gene] = possible_tags
         return gene_group_tags
@@ -83,10 +97,10 @@ class VBrewer(Brewer):
 class JBrewer(Brewer):
     """ Class which creates V tags """
 
-    def __init__(self, chain: str, species: str, tag_len):
-        super().__init__(chain, "J", species, tag_len)
+    def __init__(self, chain: str, species: str, tag_len: int=20, functional: bool=False):
+        super().__init__(chain, "J", species, tag_len, functional)
 
-    def brew_all_tags(self):
+    def brew_all_tags(self, functional=True):
         """
         Generate 20bp tags from the prototypical allelel sequence for each gene
         """

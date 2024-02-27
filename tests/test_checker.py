@@ -25,7 +25,7 @@ class TestGeneDifferences:
         reference_gene_list = {"TRAV1-1": {"01": "abc", "02": "aab"},
                                "TRAV14/DV4": {"01": "def", "02": "ddf"},
                                "TRAV-2": {"01": "ghi", "02": "ggi"}}
-        monkeypatch.setattr(query, "get_tr_alleles_for_gene_group_for_species", lambda x, y, z: (None, reference_gene_list))
+        monkeypatch.setattr(query, "get_tr_alleles", lambda x, y, z: (None, reference_gene_list))
         differences = checkers.find_gene_differences(resource_location, "human", "extended", "A", "V")
         assert differences == set(["TRAV-2"])
 

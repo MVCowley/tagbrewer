@@ -41,7 +41,7 @@ def find_gene_differences(directory: str, species: str, version: str, chain: str
         species_fmt2 = "mouse"
 
     try:
-        alleles_functionality, alleles_fastas = query.get_tr_alleles_for_gene_group_for_species(chain, region, species_fmt1)
+        alleles_functionality, alleles_fastas = query.get_tr_alleles(chain, region, species_fmt1)
     except FileNotFoundError:
         return f"TR{chain}{region} not present in current decombinator."
     
