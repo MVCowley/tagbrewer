@@ -25,7 +25,7 @@ class TestBrewAllTags:
         species = "Homo sapiens"
         brewer = brewers.JBrewer(chain, species)
         all_tags = brewer.brew_all_tags()
-        assert all_tags['TRBJ1-1'][0] == "tgaacactgaagctttcttt"
+        assert all_tags['TRBJ1-1'][0] == "agctttctttggacaaggca"
 
     def test_vbrewer(self):
         chain = "B"

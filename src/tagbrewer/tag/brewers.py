@@ -55,6 +55,13 @@ class Brewer(ABC):
                 else:
                     continue
         return functional
+    
+    def check_over_alleles(self, possible_tags, alleles):
+        combined_alleles = ",".join([allele for allele in alleles.values()])
+        valid_tags = [possible_tag for possible_tag in possible_tags 
+                      if possible_tag in combined_alleles]
+        return valid_tags
+
 
 class VBrewer(Brewer):
     """ Class which creates V tags """
@@ -81,32 +88,38 @@ class VBrewer(Brewer):
 
         return not_v_read1 - READ_1_LENGTH
 
-    def brew_all_tags(self, functional=True):
+    def brew_all_tags(self):
         """
         Generate 20bp tags from the prototypical allelel sequence for each gene
         """
         gene_group_tags = {}
+
         for gene, alleles in self.fasta_dicts.items():
             prototypical_fasta = alleles['01']
             start_index = self.conservative_v_gene_start_index()
             sliced_fasta = prototypical_fasta[start_index: -REGION_DELS]
-            possible_tags = [i for i in strings.slice_iterator(sliced_fasta, self.tag_len)]
-            gene_group_tags[gene] = possible_tags
+
+            possible_tags = [i for i in strings.slice_iterator(sliced_fasta, self.tag_len)]            
+            gene_group_tags[gene] = self.check_over_alleles(possible_tags, alleles)
+
         return gene_group_tags
     
 class JBrewer(Brewer):
-    """ Class which creates V tags """
+    """ Class which creates J tags """
 
     def __init__(self, chain: str, species: str, tag_len: int=20, functional: bool=False):
         super().__init__(chain, "J", species, tag_len, functional)
 
-    def brew_all_tags(self, functional=True):
+    def brew_all_tags(self):
         """
         Generate 20bp tags from the prototypical allelel sequence for each gene
         """
         gene_group_tags = {}
         for gene, alleles in self.fasta_dicts.items():
             prototypical_fasta = alleles['01']
-            possible_tags = [i for i in strings.slice_iterator(prototypical_fasta, self.tag_len)]
-            gene_group_tags[gene] = possible_tags
+            sliced_fasta = prototypical_fasta[REGION_DELS:]
+
+            possible_tags = [i for i in strings.slice_iterator(sliced_fasta, self.tag_len)]
+            gene_group_tags[gene] = self.check_over_alleles(possible_tags, alleles)
+
         return gene_group_tags
