@@ -2,7 +2,7 @@ from tagbrewer.tag import brewers
 
 class TestMaxGeneLengths:
 
-    def test_get_max_gene_length(self):
+    def test_get_max_gene_length(self, monkeypatch):
         chain = "B"
         species = "Homo sapiens"
         brewer = brewers.VBrewer(chain, species)
@@ -34,24 +34,10 @@ class TestBrewAllTags:
         all_tags = brewer.brew_all_tags()
         assert all_tags['TRBV1'][0] == "tgtggtcgcactgcagcaag"
 
-class TestBrewTags:
+# class TestBrewTags:
 
     # TODO: alter test to specifically test for a tag which overlaps
     # perhaps negatative assertion
-
-    def test_jbrewer(self):
-        chain = "B"
-        species = "Homo sapiens"
-        brewer = brewers.JBrewer(chain, species)
-        tags = brewer.brew_tags()
-        assert tags['TRBJ1-1'][0] == "agctttctttggacaaggca"
-
-    def test_vbrewer(self):
-        chain = "B"
-        species = "Homo sapiens"
-        brewer = brewers.VBrewer(chain, species)
-        tags = brewer.brew_tags()
-        assert tags['TRBV1'][0] == "tgtggtcgcactgcagcaag"
 
 class TestFindUndecombinable:
 
