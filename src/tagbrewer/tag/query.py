@@ -22,10 +22,11 @@ def parse_fasta_header(line: str) -> Tuple[str, str, str]:
 
     return gene, allele_designation, functionality
 
-def get_tr_alleles(chain: str, region:str, species: str) -> Tuple[DefaultDict[str, dict], DefaultDict[str, dict]]:
-    """
-    Code from: https://github.com/yutanagano/tidytcells/blob/50af17ff1230cd3312caf14bded48987754528ef/scripts/script_utility.py#L2
-    """
+def get_tr_alleles(
+    chain: str, region: str, species: str
+) -> Tuple[
+    DefaultDict[str, DefaultDict[str, dict]], DefaultDict[str, DefaultDict[str, dict]]
+]:
     alleles = collections.defaultdict(dict)
 
     response = requests.get(

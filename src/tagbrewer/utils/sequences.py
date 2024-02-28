@@ -1,6 +1,5 @@
 from Bio.Seq import Seq
 
-# TODO: Refactor code to move IMGT lookup to this module
 # TODO: Alter get_c_region_post_rt to use IMGT lookup
 
 def subtract_primer(gene_nucleotides, primer):
