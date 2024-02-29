@@ -48,11 +48,11 @@ class Brewer(ABC):
             for check_gene, check_possible_tags in all_tags.items():
                 if gene != check_gene:
                     check_list.extend(check_possible_tags)
+            check_set = set(check_list)
             for test_tag in possible_tags:
-                if test_tag in check_list:
+                if test_tag in check_set:
                     continue
-                else:
-                    unique_tags[gene].append(test_tag)
+                unique_tags[gene].append(test_tag)
         return unique_tags
     
     def find_undecombinable(self) -> List[str]:
