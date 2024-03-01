@@ -1,6 +1,10 @@
 from tagbrewer.tag import query
+from typing import Tuple, DefaultDict
+import collections
+from bs4 import BeautifulSoup
+import pytest
 
-TAG_LEN = 20
+TAG_LEN = 20    
 
 def test_get_tr_alleles_for_gene_group_for_species_functionality():
     species = "Homo sapiens"

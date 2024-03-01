@@ -1,58 +1,85 @@
 from tagbrewer.tag import brewers
+from typing import Dict, List
+import pytest
 
-class TestMaxGeneLengths:
+@pytest.fixture(scope="module")
+def vbrewer() -> brewers.VBrewer:
+    chain = "B"
+    species = "Homo sapiens"
+    return brewers.VBrewer(chain, species)
 
-    def test_get_max_gene_length(self, monkeypatch):
-        chain = "B"
-        species = "Homo sapiens"
-        brewer = brewers.VBrewer(chain, species)
-        max_gene_length = brewer.get_max_gene_length("D")
+@pytest.fixture(scope="module")
+def jbrewer() -> brewers.JBrewer:
+    chain = "B"
+    species = "Homo sapiens"
+    return brewers.JBrewer(chain, species)
+
+class TestConstructLengthMethods:
+
+    def test_get_max_gene_length(self, vbrewer: brewers.VBrewer) -> None:
+        max_gene_length = vbrewer.get_max_gene_length("D")
         assert max_gene_length == len("gggactagcggggggg") # TRBD2
 
-class TestVStartIndex:
-
-    def test_conservative_v_gene_start_index(self):
-        chain = "B"
-        species = "Homo sapiens"
-        brewer = brewers.VBrewer(chain, species)
-        start_index = brewer.conservative_v_gene_start_index()
+    def test_conservative_v_gene_start_index(self, vbrewer: brewers.VBrewer) -> None:
+        start_index = vbrewer.conservative_v_gene_start_index()
         assert start_index == -57
 
 class TestBrewAllTags:
 
-    def test_jbrewer(self):
-        chain = "B"
-        species = "Homo sapiens"
-        brewer = brewers.JBrewer(chain, species)
-        all_tags = brewer.brew_all_tags()
+    def test_jbrewer(self, jbrewer: brewers.JBrewer) -> None:
+        all_tags = jbrewer.brew_all_tags()
         assert all_tags['TRBJ1-1'][0] == "agctttctttggacaaggca"
 
-    def test_vbrewer(self):
-        chain = "B"
-        species = "Homo sapiens"
-        brewer = brewers.VBrewer(chain, species)
-        all_tags = brewer.brew_all_tags()
+    def test_vbrewer(self, vbrewer: brewers.VBrewer) -> None:
+        all_tags = vbrewer.brew_all_tags()
         assert all_tags['TRBV1'][0] == "tgtggtcgcactgcagcaag"
 
-# class TestBrewTags:
+class TestBrewTags:
 
-    # TODO: alter test to specifically test for a tag which overlaps
-    # perhaps negatative assertion
+    def test_jbrewer(self, jbrewer: brewers.JBrewer) -> None:
+        tags = jbrewer.brew_tags()
+        print(tags.gene_layers)
+        assert tags.gene_layers['TRBJ1-1'][0][0] == "agctttctttggacaaggca"
+        assert len(tags.gene_layers['TRBJ1-1'].keys()) == 1
+
+    def test_vbrewer(self, vbrewer: brewers.VBrewer) -> None:
+        tags = vbrewer.brew_tags()
+        print(tags.gene_layers)
+        assert tags.gene_layers['TRBV1'][0][0] == "tgtggtcgcactgcagcaag"
+        assert tags.gene_layers["TRBV7-3"][1] == "Cannot find unique tag set."
+        
+class TestBrewerLoopMethods:
+    
+    @pytest.fixture
+    def check_genes(self) -> Dict[str, List[str]]:
+        return {"gene1": ["abc"],
+                "gene2": ["def"],
+                "gene3": ["def", "jkl"]}
+
+    def test_create_check_list(self, jbrewer: brewers.JBrewer, check_genes: Dict[str, List[str]]) -> None:
+        gene = "gene1"
+        check_list = jbrewer.create_check_list(gene, check_genes)
+        assert check_list == ["def", "def", "jkl"]
+
+    def test_find_clashes(self, jbrewer: brewers.JBrewer, check_genes: Dict[str, List[str]]) -> None:
+        best_tag = "def"
+        clashes = jbrewer.find_clashes(check_genes, best_tag)
+        assert clashes == ["gene2", "gene3"]
+
+    def test_check_over_alleles(self, jbrewer: brewers.JBrewer) -> None:
+        possible_tags = ["abc", "def"]
+        alleles = {"01": "abcdef", "02": "defghi"}
+        valid_tags = jbrewer.check_over_alleles(possible_tags, alleles)
+        assert valid_tags == ["def"]
 
 class TestFindUndecombinable:
 
-    def test_find_undecombinable_j(self):
-        chain = "B"
-        species = "Homo sapiens"
-        brewer = brewers.JBrewer(chain, species)
-        undecombinable = brewer.find_undecombinable()
+    def test_find_undecombinable_j(self, jbrewer: brewers.JBrewer) -> None:
+        undecombinable = jbrewer.find_undecombinable()
         assert undecombinable == set()
 
-    def test_find_undecombinable_v(self):
-        chain = "B"
-        species = "Homo sapiens"
-        brewer = brewers.VBrewer(chain, species)
-        undecombinable = brewer.find_undecombinable()
+    def test_find_undecombinable_v(self, vbrewer: brewers.VBrewer) -> None:
+        undecombinable = vbrewer.find_undecombinable()
         assert undecombinable == set(('TRBV11-3',
                                       'TRBV7-3',
                                       'TRBV23/OR9-2',
@@ -73,17 +100,5 @@ class TestDropNonFunctional:
         species = "Homo sapiens"
         brewer = brewers.JBrewer(chain, species, functional=True)
         tags = brewer.brew_tags()
-        assert not ("TRAJ51" in tags.keys())
-        assert "TRAJ10" in tags.keys()
-
-class TestCheckOverAlleles:
-
-    def test_check_over_alleles(self):
-        chain = "B"
-        species = "Homo sapiens"
-        brewer = brewers.JBrewer(chain, species)
-        possible_tags = ["abc", "def"]
-        alleles = {"01": "abcdef", "02": "defghi"}
-        valid_tags = brewer.check_over_alleles(possible_tags, alleles)
-        assert valid_tags == ["def"]
-
+        assert not ("TRAJ51" in tags.gene_layers.keys())
+        assert "TRAJ10" in tags.gene_layers.keys()

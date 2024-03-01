@@ -40,14 +40,15 @@ def find_gene_differences(directory: str, species: str, version: str, chain: str
         species_fmt1 = "Mus musculus"
         species_fmt2 = "mouse"
 
+    alleles_functionality, alleles_fastas = query.get_tr_alleles(chain, region, species_fmt1)        
+    imgt_gene_list = set(collapse_alleles(alleles_fastas))
+    
     try:
-        alleles_functionality, alleles_fastas = query.get_tr_alleles(chain, region, species_fmt1)
+        dcr_gene_list = extract_gene_list(directory, species_fmt2, version, chain, region)
     except FileNotFoundError:
         return f"TR{chain}{region} not present in current decombinator."
-    
-    imgt_gene_list = set(collapse_alleles(alleles_fastas))
-    dcr_gene_list = extract_gene_list(directory, species_fmt2, version, chain, region)
     diff = dcr_gene_list.symmetric_difference(imgt_gene_list)
+    
     if len(diff) == 0:
         return f"TR{chain}{region} up to date."
     else:
